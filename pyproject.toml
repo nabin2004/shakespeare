@@ -1,0 +1,44 @@
+[project]
+name = "shakespeare-tools"
+version = "0.1.0"
+description = "ShakespeareCRM tooling — LinkML-driven ontology generation and helpers"
+readme = "README.md"
+authors = [
+    { name = "Nabin Oli", email = "olinabin2004@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "linkml>=1.10.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "pydantic>=2.0",
+    "pydantic-ai>=0.0.39",
+    "rdflib>=7.0",
+    "httpx>=0.27.0",
+    "jsonschema>=4.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+# Optional: sentence segmentation with linguistic model (requires Python 3.11–3.13 wheels).
+curation-nlp = [
+    "spacy>=3.7.0",
+]
+ui = [
+    "gradio>=5.0.0",
+    "pandas>=2.0",
+]
+
+[project.scripts]
+generate-ontology = "shakespeare_tools.ontology_gen:main"
+mit-html-parse = "shakespeare_tools.mit_html.cli:main"
+shakespeare-curate = "shakespeare_tools.curation.cli:main"
+shakespeare-oxigraph-load = "shakespeare_tools.oxigraph_load:main"
+shakespeare-sparql-ui = "shakespeare_tools.ui.app:main"
+
+[build-system]
+requires = ["uv_build>=0.11.6,<0.12.0"]
+build-backend = "uv_build"
