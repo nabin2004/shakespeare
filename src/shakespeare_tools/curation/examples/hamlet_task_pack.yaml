@@ -1,0 +1,12 @@
+work_id: sc:hamlet
+work_slug: hamlet
+instructions: >
+  Extract dramatic events (plot-level E5-style occurrences) grounded in span_ids.
+  Prefer participant mentions that match known_entities when ambiguous.
+known_entities:
+  - id: sc:hamlet-work
+    label: Hamlet play
+    type: Work
+  - id: sc:hamlet-prince
+    label: Hamlet
+    type: FictionalCharacter

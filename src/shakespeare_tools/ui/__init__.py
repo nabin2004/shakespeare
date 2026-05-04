@@ -1,0 +1,1 @@
+"""Optional Gradio SPARQL explorer."""
