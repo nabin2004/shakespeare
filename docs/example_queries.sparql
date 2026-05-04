@@ -1,0 +1,69 @@
+# ShakespeareCRM — example SPARQL queries (Phase 0 targets)
+#
+# Prefixes MUST be aligned with generated ontology and data load scripts.
+# Placeholder prefixes below — replace after LinkML/Oxigraph import:
+#
+# PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+# PREFIX sc:  <https://example.org/shakespeare-crm/>
+#
+# Named graphs: use GRAPH ?g { ... } once graph IRIs are fixed in Phase 0.
+
+# ---------------------------------------------------------------------------
+# Q1 — Betrayal events and participating characters (CRM event-centric)
+# ---------------------------------------------------------------------------
+# SELECT ?event ?char WHERE {
+#   GRAPH sc:graphData {
+#     ?event a crm:E5_Event ;
+#            crm:P11_had_participant ?char ;
+#            crm:P2_has_type sc:type_betrayal .
+#   }
+# }
+
+# ---------------------------------------------------------------------------
+# Q2 — All dramatic events in Hamlet (filter by work / information object)
+# ---------------------------------------------------------------------------
+# SELECT ?event ?label WHERE {
+#   GRAPH sc:graphData {
+#     ?play a crm:E73_Information_Object ;
+#           sc:slug "hamlet" .
+#     ?event a crm:E5_Event ;
+#            crm:P129_is_about | crm:P67_refers_to ?play .
+#     OPTIONAL { ?event rdfs:label ?label . }
+#   }
+# }
+
+# ---------------------------------------------------------------------------
+# Q3 — Characters (fictional actors) appearing in the play
+# ---------------------------------------------------------------------------
+# SELECT ?char ?name WHERE {
+#   GRAPH sc:graphData {
+#     ?char a sc:FictionalCharacter ;
+#           sc:appears_in_work ?play .
+#     ?play sc:slug "hamlet" .
+#     OPTIONAL { ?char rdfs:label ?name . }
+#   }
+# }
+
+# ---------------------------------------------------------------------------
+# Q4 — Performances (E7) linked to a work — placeholder pattern
+# ---------------------------------------------------------------------------
+# SELECT ?activity ?when ?where WHERE {
+#   GRAPH sc:graphData {
+#     ?activity a crm:E7_Activity ;
+#               sc:performance_of ?play .
+#     ?play sc:slug "hamlet" .
+#     OPTIONAL { ?activity crm:P4_has_time-span ?ts . ?ts crm:P82_at_some_time_within ?when . }
+#     OPTIONAL { ?activity crm:P7_took_place_at ?where . }
+#   }
+# }
+
+# ---------------------------------------------------------------------------
+# Q5 — Motif-typed events (E55 Type via P2) for a motif IRI or slug
+# ---------------------------------------------------------------------------
+# SELECT ?event ?motif WHERE {
+#   GRAPH sc:graphData {
+#     ?event a crm:E5_Event ;
+#            crm:P2_has_type ?motif .
+#     ?motif skos:prefLabel|rdfs:label "madness"@en .
+#   }
+# }
