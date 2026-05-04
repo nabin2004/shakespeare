@@ -1,0 +1,5 @@
+# Tutorial-style Work instance ($id resolves under default vocabulary `sc`).
+id: sc:hamlet
+label: Hamlet
+slug: hamlet
+genre: tragedy

@@ -1,0 +1,137 @@
+id: https://w3id.org/shakespeare-crm/schema
+name: shakespeare_crm
+title: Shakespeare CRM schema
+description: >
+  LinkML-first schema for ShakespeareCRM: domain classes specialise CIDOC CRM 7.x
+  mixin anchors (information object, actor, event, activity). Edit this YAML — then run
+  the standard LinkML CLIs (`gen-owl`, `gen-json-schema`, `linkml-validate`; see ontology/README.md).
+license: https://creativecommons.org/licenses/by/4.0/
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  sc: https://w3id.org/shakespeare-crm/
+  crm: http://www.cidoc-crm.org/cidoc-crm/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+default_prefix: sc
+default_range: string
+
+imports:
+  - linkml:types
+
+# ── CIDOC CRM anchors (thin LinkML façade; ontology IRIs retained in OWL) ──
+
+classes:
+  NamedEntity:
+    abstract: true
+    description: Base URI + human-readable label (local convenience; CIDOC appellations layered in Phase 1+).
+    slots:
+      - id
+      - label
+
+  E73_Information_Object:
+    mixin: true
+    abstract: true
+    description: CIDOC CRM E73 Information Object — hook for authored / documented works (plays, poems, texts).
+    class_uri: crm:E73_Information_Object
+
+  E39_Actor:
+    mixin: true
+    abstract: true
+    description: >
+      CIDOC CRM E39 Actor — used here for fictional dramatic personas (explicitly flagged with is_fictional).
+    class_uri: crm:E39_Actor
+
+  E5_Event:
+    mixin: true
+    abstract: true
+    description: CIDOC CRM E5 Event — narrative / plot-level occurrences.
+    class_uri: crm:E5_Event
+
+  E7_Activity:
+    mixin: true
+    abstract: true
+    description: CIDOC CRM E7 Activity — live performance, rehearsal, staged reading, etc.
+    class_uri: crm:E7_Activity
+
+  # ── Shakespeare domain classes (narrow specialisations backed by CIDOC mixin / `sc:` URIs) ──
+
+  Work:
+    is_a: NamedEntity
+    description: Dramatic or poetic work modeled as subclass of CIDOC E73 (via mixin).
+    class_uri: sc:Work
+    mixins:
+      - E73_Information_Object
+    slots:
+      - slug
+      - genre
+
+  FictionalCharacter:
+    is_a: NamedEntity
+    description: In-world character; CIDOC-aligned via E39_Actor mixin plus fictional qualifier.
+    class_uri: sc:FictionalCharacter
+    mixins:
+      - E39_Actor
+    slots:
+      - appears_in_work
+      - is_fictional
+
+  DramaticEvent:
+    is_a: NamedEntity
+    description: Plot event (death, betrayal, marriage, etc.) as subclass pattern for E5.
+    class_uri: sc:DramaticEvent
+    mixins:
+      - E5_Event
+    slots:
+      - motif_type
+      - in_work
+      # Optional CRM-aligned participation hook (populate in instance data Phase 1+)
+      - p11_had_participant
+
+  Performance:
+    is_a: NamedEntity
+    description: Staged or recorded performance modeled as subclass of CIDOC E7.
+    class_uri: sc:Performance
+    mixins:
+      - E7_Activity
+    slots:
+      - performance_of
+
+slots:
+  id:
+    identifier: true
+    range: uriorcurie
+    required: true
+  label:
+    slot_uri: rdfs:label
+    range: string
+  slug:
+    description: Stable slug for URI minting (e.g. hamlet).
+    range: string
+    pattern: "^[a-z0-9-]+$"
+  genre:
+    description: Genre label (comedy, tragedy, history, poetry, …).
+    range: string
+  is_fictional:
+    range: boolean
+    ifabsent: true
+  appears_in_work:
+    description: Dramatic persona appears within this intellectual work instance.
+    range: Work
+    multivalued: true
+  in_work:
+    description: Narrative event is anchored in this work instance.
+    range: Work
+  motif_type:
+    description: Narrow category for the event (toward E55 Type in CRM; string hook for now).
+    range: string
+  performance_of:
+    description: >
+      Local slot linking a Performance activity to its Work instance.
+      Narrow CRM property mapping (realisation chain) is deliberate Phase 1+ work — prefer not to guess P-number here.
+    range: Work
+  p11_had_participant:
+    description: CIDOC CRM P11 had participant — event participants (characters, aggregates, roles).
+    slot_uri: crm:P11_had_participant
+    range: FictionalCharacter
+    multivalued: true

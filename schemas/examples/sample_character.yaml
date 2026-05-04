@@ -1,0 +1,5 @@
+id: sc:character_hamlet
+label: Prince Hamlet
+is_fictional: true
+appears_in_work:
+  - sc:hamlet
