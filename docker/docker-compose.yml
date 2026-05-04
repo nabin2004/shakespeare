@@ -1,0 +1,58 @@
+# Phase 0 — Oxigraph + ontology docs (WIDOCO).
+#
+# Oxigraph: http://localhost:7878 (SPARQL /query, Update /update, Graph Store /store)
+# WIDOCO:  http://localhost:8080  (--profile docs)
+#
+# Oxigraph image is distroless (no curl); health checks run from the host if needed.
+name: shakespeare-crm
+
+volumes:
+  oxigraph_data:
+
+services:
+  oxigraph:
+    image: ghcr.io/oxigraph/oxigraph:latest
+    ports:
+      - "7878:7878"
+    volumes:
+      - oxigraph_data:/data
+
+  scaffold_placeholder:
+    image: alpine:3.19
+    command:
+      ["sh", "-c", "echo 'Scaffold placeholder — use oxigraph service instead' && sleep 1"]
+    profiles: ["scaffold"]
+
+  # Build HTML (+ WebVOWL) from ontology/shakespeare_crm.owl into docs/widoco/
+  widoco-generate:
+    build:
+      context: ./widoco
+      dockerfile: Dockerfile
+    image: shakespeare-widoco:local
+    profiles: ["docs"]
+    volumes:
+      - ../ontology:/input:ro
+      - ../docs/widoco:/output
+    command:
+      [
+        "-ontFile",
+        "/input/shakespeare_crm.owl",
+        "-outFolder",
+        "/output",
+        "-lang",
+        "en",
+        "-rewriteAll",
+        "-webVowl",
+      ]
+
+  widoco:
+    image: nginx:alpine
+    profiles: ["docs"]
+    ports:
+      - "8080:80"
+    volumes:
+      - ../docs/widoco:/usr/share/nginx/html:ro
+      - ./widoco/nginx.default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      widoco-generate:
+        condition: service_completed_successfully
