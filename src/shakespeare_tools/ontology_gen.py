@@ -41,16 +41,21 @@ def generate(schema_path: Path, out_dir: Path) -> tuple[Path, Path]:
         "--mergeimports",
         "--stacktrace",
     ]
-    subprocess.run(
-        [*base, "-o", str(ttl_path), "-f", "ttl"],
+    # ``gen-owl`` emits OWL to stdout; ``-o`` may not persist output with current LinkML CLI.
+    r_ttl = subprocess.run(
+        [*base, "-f", "ttl"],
         check=True,
-        stdout=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
-    subprocess.run(
-        [*base, "-o", str(owl_path), "-f", "xml"],
+    ttl_path.write_text(r_ttl.stdout, encoding="utf-8")
+    r_owl = subprocess.run(
+        [*base, "-f", "xml"],
         check=True,
-        stdout=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
+    owl_path.write_text(r_owl.stdout, encoding="utf-8")
     return ttl_path, owl_path
 
 

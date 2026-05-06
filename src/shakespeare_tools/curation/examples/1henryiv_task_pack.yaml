@@ -1,0 +1,14 @@
+# Task pack for MIT HTML JSON (`plays/1henryiv.json`). Use with work sample in
+# `schemas/examples/sample_work_henry_iv.yaml` and `uv run shakespeare-curate prepare …`.
+work_id: sc:henry_iv_part_1
+work_slug: 1henryiv
+instructions: >
+  Extract dramatic events grounded in span_ids. Passages must be prepared from play JSON
+  (not raw JSON-as-text) so each span is a single line of dialogue or stage direction.
+known_entities:
+  - id: sc:henry_iv_part_1
+    label: Henry IV Part 1
+    type: Work
+  - id: sc:falstaff
+    label: Falstaff
+    type: FictionalCharacter

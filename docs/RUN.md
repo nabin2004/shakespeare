@@ -143,32 +143,31 @@ uv run mit-html-parse
 
 ## 8. STRUCTSENSE-style curation pipeline (`shakespeare-curate`)
 
-The pipeline is broken down into multiple steps (prepare, run, review, validate, and export):
+The pipeline is broken down into multiple steps (prepare, run, review, validate, and export). Here is an example of running the sequence:
 
-1. **Prepare passages** from an input file:
+1. **Prepare passages** from an input file (e.g., `1henryiv.json`):
    ```bash
-   uv run shakespeare-curate prepare INPUT -o passages.json [--spacy]
+   uv run shakespeare-curate prepare data/processed/mit_html/plays/1henryiv.json -o passages.json --spacy
    ```
 
-2. **Run the curation tasks** using a specified task pack (e.g., `src/shakespeare_tools/curation/examples/hamlet_task_pack.yaml`):
+2. **Run the curation tasks** using a specified task pack (using `--mock` for offline/CI environments without a live LLM):
    ```bash
-   uv run shakespeare-curate run passages.json --task-pack PACK.yaml -o draft.json [--mock] [--ontology-ttl PATH] [--model MODEL]
-   ```
-   *(Note: Use `--mock` for offline/CI environments without a live LLM.)*
-
-3. **Apply reviews** to the draft:
-   ```bash
-   uv run shakespeare-curate apply-review draft.json -o merged.json [--auto-approve]
+   uv run shakespeare-curate run passages.json --task-pack src/shakespeare_tools/curation/examples/hamlet_task_pack.yaml -o draft.json --mock
    ```
 
-4. **Validate** the generated structures:
+3. **Apply reviews** to the draft to approve suggestions:
    ```bash
-   uv run shakespeare-curate validate draft.json
+   uv run shakespeare-curate apply-review draft.json -o merged.json --auto-approve
+   ```
+
+4. **Validate** the generated structures in the merged file:
+   ```bash
+   uv run shakespeare-curate validate merged.json
    ```
 
 5. **Export to Turtle/RDF** for loading into the knowledge graph:
    ```bash
-   uv run shakespeare-curate export-turtle draft.json -o out.ttl [--format turtle|trig] [--graph-instances IRI] [--auto-approve]
+   uv run shakespeare-curate export-turtle merged.json -o out.ttl
    ```
 
 ---

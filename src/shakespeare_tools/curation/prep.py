@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import uuid
 from pathlib import Path
+from typing import Literal
 from xml.etree import ElementTree as ET
 
 from shakespeare_tools.curation.models import PreparedPassage, SentenceSpan
+from shakespeare_tools.mit_html.models import (
+    ParsedPlay,
+    StageDirection,
+    TextLine,
+    is_play_json_dict,
+    play_from_dict,
+)
 
 
 def _fallback_sentences(text: str, passage_id: str) -> list[SentenceSpan]:
@@ -74,6 +83,113 @@ def segment_text_to_sentences(text: str, passage_id: str, prefer_spacy: bool) ->
     return _fallback_sentences(text, passage_id)
 
 
+def _stable_passage_id_stem(path: Path, play_slug: str) -> str:
+    h = hashlib.sha256(str(path.resolve()).encode()).hexdigest()[:8]
+    stem = play_slug or path.stem
+    return f"passage-{stem}-{h}"
+
+
+def prepared_passage_from_mit_play(
+    play: ParsedPlay,
+    *,
+    passage_id: str,
+    source_path: str,
+) -> PreparedPassage:
+    """One PreparedPassage: flat dialogue lines / directions with locator metadata on each span."""
+    sentences: list[SentenceSpan] = []
+    chunks: list[str] = []
+    offset = 0
+
+    def push(
+        span_id: str,
+        text: str,
+        *,
+        act: int | None,
+        scene: int | None,
+        line_anchor: str | None,
+        item_kind: Literal["line", "stage_direction", "opening_stage_direction"] | None,
+        speaker: str | None,
+    ) -> None:
+        nonlocal offset
+        t = text.strip()
+        if not t:
+            return
+        sentences.append(
+            SentenceSpan(
+                span_id=span_id,
+                text=t,
+                char_start=offset,
+                char_end=offset + len(t),
+                act=act,
+                scene=scene,
+                line_anchor=line_anchor,
+                item_kind=item_kind,
+                speaker=speaker,
+            )
+        )
+        chunks.append(t)
+        offset += len(t) + 1
+
+    for scene in play.scenes:
+        if scene.opening_stage_direction and scene.opening_stage_direction.strip():
+            sid = f"{passage_id}:a{scene.act}s{scene.scene}:open"
+            push(
+                sid,
+                scene.opening_stage_direction,
+                act=scene.act,
+                scene=scene.scene,
+                line_anchor=None,
+                item_kind="opening_stage_direction",
+                speaker=None,
+            )
+        for sp in scene.speeches:
+            for idx, item in enumerate(sp.items):
+                sid = f"{passage_id}:a{scene.act}s{scene.scene}:sp{sp.speech_index}i{idx}"
+                if isinstance(item, TextLine):
+                    anchor = item.anchor
+                    lac = str(anchor) if anchor is not None else None
+                    push(
+                        sid,
+                        item.text,
+                        act=item.act if item.act is not None else scene.act,
+                        scene=item.scene if item.scene is not None else scene.scene,
+                        line_anchor=lac,
+                        item_kind="line",
+                        speaker=sp.speaker or None,
+                    )
+                elif isinstance(item, StageDirection):
+                    push(
+                        sid,
+                        item.text,
+                        act=scene.act,
+                        scene=scene.scene,
+                        line_anchor=None,
+                        item_kind="stage_direction",
+                        speaker=sp.speaker or None,
+                    )
+
+    full_text = "\n".join(chunks)
+    return PreparedPassage(
+        passage_id=passage_id,
+        source_path=source_path,
+        text=full_text,
+        char_end=len(full_text),
+        sentences=sentences,
+    )
+
+
+def _try_prepare_mit_play_json(raw: str, path: Path) -> list[PreparedPassage] | None:
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or not is_play_json_dict(data):
+        return None
+    play = play_from_dict(data)
+    passage_id = _stable_passage_id_stem(path, play.slug)
+    return [prepared_passage_from_mit_play(play, passage_id=passage_id, source_path=str(path.resolve()))]
+
+
 def _strip_namespace(tag: str) -> str:
     if "}" in tag:
         return tag.rsplit("}", 1)[-1]
@@ -125,6 +241,19 @@ def prepare_path(path: Path | str, *, prefer_spacy: bool = False) -> list[Prepar
         return passages if passages else []
 
     raw = p.read_text(encoding="utf-8")
+
+    if p.suffix.lower() == ".json":
+        mit = _try_prepare_mit_play_json(raw, p)
+        if mit is not None:
+            return mit
+    else:
+        stripped = raw.lstrip()
+        if stripped.startswith("{"):
+            mit = _try_prepare_mit_play_json(raw, p)
+            if mit is not None:
+                return mit
+
+    passage_id = f"passage-{p.stem}-{uuid.uuid4().hex[:8]}"
     sents = segment_text_to_sentences(raw, passage_id, prefer_spacy)
     return [
         PreparedPassage(

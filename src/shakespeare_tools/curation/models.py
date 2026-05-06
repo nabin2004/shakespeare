@@ -15,6 +15,11 @@ class SentenceSpan(BaseModel):
     text: str
     char_start: int
     char_end: int
+    act: int | None = None
+    scene: int | None = None
+    line_anchor: str | None = None
+    item_kind: Literal["line", "stage_direction", "opening_stage_direction"] | None = None
+    speaker: str | None = None
 
 
 class PreparedPassage(BaseModel):
@@ -112,6 +117,11 @@ class ApprovedDramaticEvent(BaseModel):
     p11_had_participant: list[str] = Field(default_factory=list)
     evidence_span_id: str
     candidate_id: str
+    dramatic_act: int | None = None
+    dramatic_scene: int | None = None
+    line_anchor: str | None = None
+    speaker_label: str | None = None
+    evidence_text: str | None = None
 
 
 class CurationDraftBundle(BaseModel):

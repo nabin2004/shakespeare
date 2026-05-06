@@ -12,6 +12,7 @@ prefixes:
   sc: https://w3id.org/shakespeare-crm/
   crm: http://www.cidoc-crm.org/cidoc-crm/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
+  dcterms: http://purl.org/dc/terms/
 
 default_prefix: sc
 default_range: string
@@ -85,6 +86,11 @@ classes:
     slots:
       - motif_type
       - in_work
+      - dramatic_act
+      - dramatic_scene
+      - line_anchor
+      - speaker_label
+      - event_description
       # Optional CRM-aligned participation hook (populate in instance data Phase 1+)
       - p11_had_participant
 
@@ -122,6 +128,22 @@ slots:
   in_work:
     description: Narrative event is anchored in this work instance.
     range: Work
+  dramatic_act:
+    description: Act number in the dramatic source used for curation (folio / edition numbering).
+    range: integer
+  dramatic_scene:
+    description: Scene number in the dramatic source used for curation.
+    range: integer
+  line_anchor:
+    description: Line anchor / line id from the processed source (e.g. Folio line label).
+    range: string
+  speaker_label:
+    description: Speaker name as given in the processed dramatic text (not necessarily aligned to a FictionalCharacter URI).
+    range: string
+  event_description:
+    slot_uri: dcterms:description
+    description: Longer evidence text (e.g. the source line) distinct from rdfs:label.
+    range: string
   motif_type:
     description: Narrow category for the event (toward E55 Type in CRM; string hook for now).
     range: string

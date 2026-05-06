@@ -88,6 +88,10 @@ def build_extractor_agent(model: str | None) -> Agent[CurationDeps, ExtractorOut
         Output JSON matching the schema: list of events with candidate_id, label, motif_type,
         evidence_span_id (must match an input span_id exactly), participant_mentions (strings).
         Only use span_ids present in the user message. Invent stable candidate_id strings prefixed with 'evt-'.
+
+        Each label must be a short human-readable title (plain prose, not JSON).
+        Do not copy escaped JSON, `"act":`, braces, or structural metadata into label.
+        Prefer paraphrasing the single span line you cite.
         """
     ).strip()
     m = model or os.environ.get("CURATION_LLM_MODEL", "openai:gpt-4o-mini")
