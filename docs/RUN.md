@@ -124,15 +124,20 @@ docker compose -f docker/docker-compose.yml --profile scaffold up scaffold_place
 
 ---
 
-## 7. MIT HTML corpus → JSON
+## 7. Scripts for Cleaning Raw Data (MIT HTML corpus → JSON)
 
-Batch export from a local MIT Shakespeare HTML tree (expects `works.html` under `--root`).
+Batch export from a local MIT Shakespeare HTML tree to clean JSON format. By default, it uses `data/raw/shakespeare` as the input root and outputs to `data/processed/mit_html`.
 
 ```bash
-uv run mit-html-parse --root path/to/raw/shakespeare
+uv run mit-html-parse
 ```
 
-**Common options:** `--play hamlet`, `--poetry`, `--prefer-full`, `--out DIR` (default: `data/processed/mit_html` under repo root).
+**Common options:** 
+- `--root path/to/raw/shakespeare` (override the default raw data path)
+- `--play hamlet` (parse a specific play only)
+- `--poetry` (also emit JSON for poems)
+- `--prefer-full` (use full.html per play with compound anchors)
+- `--out DIR` (override the default `data/processed/mit_html` output path).
 
 ---
 
